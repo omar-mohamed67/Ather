@@ -14,6 +14,17 @@ async function files(directory) {
 const sources = (
   await Promise.all(["server", "scripts", "public", "tests"].map(files))
 ).flat();
+if (await fs.access(".git").then(() => true, () => false)) {
+  const listed = spawnSync("git", ["ls-files", "--cached", "--", "public/data"], {
+    encoding: "utf8",
+  });
+  if (listed.status !== 0) throw new Error("Could not check deployed data files.");
+  const tracked = new Set(listed.stdout.trim().split(/\r?\n/));
+  for (const filename of sources.filter((name) => name.startsWith(`public${path.sep}data${path.sep}`))) {
+    if (!tracked.has(filename.replaceAll(path.sep, "/")))
+      throw new Error(`Content file is missing from Git: ${filename}`);
+  }
+}
 let checked = 0;
 for (const filename of sources) {
   if (filename.endsWith(".js")) {
