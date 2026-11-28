@@ -3628,6 +3628,20 @@ import { mountNoorGame } from "./noor-games.js";
         badge: "\u0627\u0642\u0631\u0623 \u0648\u0627\u0643\u062A\u0634\u0641",
       },
       {
+        id: "sentence-forge",
+        title: "مَسبَك الجُمَل",
+        description:
+          "تعلّم الفعل والفاعل والمفعول به، ثم طبّق القاعدة في ثلاث جمل جديدة.",
+        category: "arabic",
+        age: "٥–١٠ سنوات",
+        emoji: "📜",
+        art: "book",
+        bg: "#e7efe4",
+        ink: "#7f9f87",
+        href: "sentence-forge.html",
+        badge: "النحو يصنع العالم",
+      },
+      {
         id: "quran-complete",
         title: "\u0623\u0643\u0645\u0644 \u0627\u0644\u0633\u0648\u0631\u0629",
         description:

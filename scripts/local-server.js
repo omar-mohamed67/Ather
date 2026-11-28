@@ -30,6 +30,29 @@ try {
   await db.close();
   throw error;
 }
+const backupPath = `${config.embeddedPath}.backup.tgz`;
+const previousBackupPath = `${config.embeddedPath}.backup.previous.tgz`;
+let backupInProgress = null;
+function saveLocalBackup() {
+  if (backupInProgress) return backupInProgress;
+  backupInProgress = (async () => {
+    const archive = await db.backupDataDir();
+    const temporaryPath = `${backupPath}.tmp`;
+    await fs.writeFile(temporaryPath, Buffer.from(await archive.arrayBuffer()));
+    try {
+      await fs.copyFile(backupPath, previousBackupPath);
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    await fs.rename(temporaryPath, backupPath);
+  })().finally(() => {
+    backupInProgress = null;
+  });
+  return backupInProgress;
+}
+await saveLocalBackup().catch((error) =>
+  console.error(`Local backup could not be saved: ${error.message}`),
+);
 const server = createApp({ db, config });
 const cleanup = setInterval(() =>
   db.query("DELETE FROM sessions WHERE expires_at < now()")
@@ -37,6 +60,12 @@ const cleanup = setInterval(() =>
     .catch(() => console.error("Local security cleanup failed.")),
 3600000);
 cleanup.unref();
+const backupTimer = setInterval(() =>
+  saveLocalBackup().catch((error) =>
+    console.error(`Local backup could not be saved: ${error.message}`),
+  ),
+900000);
+backupTimer.unref();
 server.listen(config.port, config.host, () => {
   const port = server.address().port;
   console.log(`Athar is running with a saved local database on port ${port}.`);
@@ -47,9 +76,16 @@ async function shutdown() {
   if (closing) return;
   closing = true;
   clearInterval(cleanup);
+  clearInterval(backupTimer);
   server.close(async () => {
-    await db.close();
-    process.exit(0);
+    try {
+      await saveLocalBackup();
+    } catch (error) {
+      console.error(`Local backup could not be saved: ${error.message}`);
+    } finally {
+      await db.close();
+      process.exit(0);
+    }
   });
 }
 process.on("SIGINT", shutdown);

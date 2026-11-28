@@ -1,0 +1,8 @@
+Options -Indexes
+DirectoryIndex index.php index.html
+RewriteEngine On
+RewriteRule ^_private(?:/|$) - [F,L,NC]
+RewriteRule ^(?:api(?:/.*)?|login|signup|setup|logout|admin|import|healthz|media/play/.*)/?$ router.php [QSA,L]
+RewriteRule ^$ router.php [QSA,L]
+RewriteRule ^stories/?$ router.php [QSA,L]
+RewriteRule ^(.+\.html)$ router.php [QSA,L,NC]

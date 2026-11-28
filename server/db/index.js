@@ -18,6 +18,7 @@ export async function openDatabase(config) {
           }),
         ),
       close: () => engine.close(),
+      backupDataDir: () => engine.dumpDataDir("gzip"),
       driver: "pglite",
     };
   } else {
